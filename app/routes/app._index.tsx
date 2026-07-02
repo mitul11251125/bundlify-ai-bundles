@@ -50,11 +50,40 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const storeHandle = shopData.myshopifyDomain ? shopData.myshopifyDomain.split(".")[0] : "bundlify-ai-bundles-store";
 
+  // Check if our App Embed is enabled on the storefront
+  let isEmbedEnabled = false;
+  try {
+    const themes = await admin.rest.resources.Theme.all({ session });
+    const mainTheme = themes.data.find((t: any) => t.role === "main");
+    
+    if (mainTheme) {
+      const asset = await admin.rest.resources.Asset.find({
+        session,
+        theme_id: mainTheme.id,
+        asset: { key: "config/settings_data.json" },
+      });
+      
+      if (asset && asset.value) {
+        const settings = JSON.parse(asset.value);
+        const blocks = settings.current?.blocks || {};
+        
+        isEmbedEnabled = Object.values(blocks).some((block: any) => 
+          block.type && 
+          block.type.includes("77aea4b5141f35938a18a48b1f314e46") && 
+          block.disabled === false
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error checking theme app embed status:", error);
+  }
+
   return {
     shopName: storeName || "Zivraa",
     ownerName: ownerName || "Mitul",
     shopDomain: session.shop,
     storeHandle: storeHandle,
+    isEmbedEnabled: isEmbedEnabled,
   };
 };
 
@@ -128,7 +157,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const { shopName, ownerName, shopDomain, storeHandle } = useLoaderData<typeof loader>();
+  const { shopName, ownerName, shopDomain, storeHandle, isEmbedEnabled } = useLoaderData<typeof loader>();
   const shopify = useAppBridge();
   
   const fetcher = useFetcher<typeof action>();
@@ -156,8 +185,8 @@ export default function Index() {
           </h1>
           <p className="welcome-subtitle">
             Owner of <strong>{shopName}</strong>
-            <span className="status-dot"></span>
-            Live Mode Active
+            <span className={`status-dot ${isEmbedEnabled ? "active" : "inactive"}`}></span>
+            App Embed: {isEmbedEnabled ? "Active" : "Inactive"}
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
@@ -243,19 +272,27 @@ export default function Index() {
             </div>
 
             {/* Step 1 */}
-            <div className={`setup-step completed ${step1Open ? "active" : ""}`}>
+            <div className={`setup-step ${isEmbedEnabled ? "completed" : ""} ${step1Open ? "active" : ""}`}>
               <div className="setup-step-header" onClick={() => { setStep1Open(!step1Open); setStep2Open(false); }}>
-                <span className="step-number">✓</span>
-                <span className="step-title">1. Activate Kaching Bundles on storefront</span>
+                <span className="step-number">{isEmbedEnabled ? "✓" : "1"}</span>
+                <span className="step-title">
+                  1. Activate Bundlify Embed on storefront {isEmbedEnabled ? "(Active)" : "(Inactive)"}
+                </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ transform: step1Open ? "rotate(180deg)" : "rotate(0)" }}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
               {step1Open && (
                 <div className="setup-step-content">
-                  <p style={{ margin: "0 0 12px 0" }}>
-                    Activate the widget by clicking the button below and then clicking "Save" on the Shopify theme editor page.
-                  </p>
+                  {isEmbedEnabled ? (
+                    <p style={{ margin: "0 0 12px 0" }}>
+                      ✓ Bundlify Embed is currently active on your storefront. Your bundle deals will display at checkout.
+                    </p>
+                  ) : (
+                    <p style={{ margin: "0 0 12px 0" }}>
+                      Activate the widget by clicking the button below and then clicking "Save" on the Shopify theme editor page.
+                    </p>
+                  )}
                   <a
                     className="btn-primary"
                     href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
@@ -265,7 +302,7 @@ export default function Index() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    Activate App Embed
+                    {isEmbedEnabled ? "Manage App Embed" : "Activate App Embed"}
                   </a>
                 </div>
               )}
