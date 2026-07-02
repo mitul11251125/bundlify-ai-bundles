@@ -298,17 +298,18 @@ export default function Index() {
               target="_blank"
               rel="noreferrer"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 180 120" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="vidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3f3f46" />
-                    <stop offset="50%" stopColor="#27272a" />
-                    <stop offset="100%" stopColor="#18181b" />
-                  </linearGradient>
-                </defs>
-                <rect width="180" height="120" fill="url(#vidGrad)" />
-                <polygon points="75,45 115,60 75,75" fill="#ffffff" opacity="0.9" />
-              </svg>
+              <img
+                src="https://img.youtube.com/vi/rgZU5pDf6mw/hqdefault.jpg"
+                alt="Tutorial Video Thumbnail"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+              />
               <div className="play-badge">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
