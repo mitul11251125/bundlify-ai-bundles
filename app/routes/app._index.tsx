@@ -48,10 +48,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     storeName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
   }
 
+  const storeHandle = shopData.myshopifyDomain ? shopData.myshopifyDomain.split(".")[0] : "bundlify-ai-bundles-store";
+
   return {
     shopName: storeName || "Zivraa",
     ownerName: ownerName || "Mitul",
     shopDomain: session.shop,
+    storeHandle: storeHandle,
   };
 };
 
@@ -125,7 +128,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const { shopName, ownerName, shopDomain } = useLoaderData<typeof loader>();
+  const { shopName, ownerName, shopDomain, storeHandle } = useLoaderData<typeof loader>();
   const shopify = useAppBridge();
   
   const fetcher = useFetcher<typeof action>();
@@ -160,7 +163,7 @@ export default function Index() {
         <div style={{ display: "flex", gap: "10px" }}>
           <a
             className="btn-secondary"
-            href={`https://${shopDomain}/admin/themes/current/editor?context=apps`}
+            href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
             target="_blank"
             rel="noreferrer"
             style={{ display: "flex", alignItems: "center" }}
@@ -255,7 +258,7 @@ export default function Index() {
                   </p>
                   <a
                     className="btn-primary"
-                    href={`https://${shopDomain}/admin/themes/current/editor?context=apps`}
+                    href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
                     target="_blank"
                     rel="noreferrer"
                   >
