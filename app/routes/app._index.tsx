@@ -79,14 +79,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     if (mainTheme && mainTheme.files?.nodes?.[0]?.body?.content) {
       const content = mainTheme.files.nodes[0].body.content;
-      // Strip comments (e.g. // lines) before parsing JSON
-      const cleanJson = content.replace(/\/\/.*/g, "").trim();
+      // Strip both inline and multi-line comments from JSON
+      const cleanJson = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').trim();
       const settings = JSON.parse(cleanJson);
       const blocks = settings.current?.blocks || {};
 
       isEmbedEnabled = Object.values(blocks).some((block: any) => 
         block.type && 
-        block.type.includes("77aea4b5141f35938a18a48b1f314e46") && 
+        block.type.includes("app-embed") && 
+        (
+          block.type.includes("bundlify") || 
+          block.type.includes("77aea4b5141f35938a18a48b1f314e46") || 
+          (process.env.SHOPIFY_API_KEY && block.type.includes(process.env.SHOPIFY_API_KEY))
+        ) && 
         block.disabled === false
       );
     }
@@ -137,13 +142,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       if (mainTheme && mainTheme.files?.nodes?.[0]?.body?.content) {
         const content = mainTheme.files.nodes[0].body.content;
-        const cleanJson = content.replace(/\/\/.*/g, "").trim();
+        // Strip both inline and multi-line comments from JSON
+        const cleanJson = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').trim();
         const settings = JSON.parse(cleanJson);
         const blocks = settings.current?.blocks || {};
 
         isEmbedEnabled = Object.values(blocks).some((block: any) => 
           block.type && 
-          block.type.includes("77aea4b5141f35938a18a48b1f314e46") && 
+          block.type.includes("app-embed") && 
+          (
+            block.type.includes("bundlify") || 
+            block.type.includes("77aea4b5141f35938a18a48b1f314e46") || 
+            (process.env.SHOPIFY_API_KEY && block.type.includes(process.env.SHOPIFY_API_KEY))
+          ) && 
           block.disabled === false
         );
       }
