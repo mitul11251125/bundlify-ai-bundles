@@ -53,26 +53,42 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Check if our App Embed is enabled on the storefront
   let isEmbedEnabled = false;
   try {
-    const themes = await admin.rest.resources.Theme.all({ session });
-    const mainTheme = themes.data.find((t: any) => t.role === "main");
-    
-    if (mainTheme) {
-      const asset = await admin.rest.resources.Asset.find({
-        session,
-        theme_id: mainTheme.id,
-        asset: { key: "config/settings_data.json" },
-      });
-      
-      if (asset && asset.value) {
-        const settings = JSON.parse(asset.value);
-        const blocks = settings.current?.blocks || {};
-        
-        isEmbedEnabled = Object.values(blocks).some((block: any) => 
-          block.type && 
-          block.type.includes("77aea4b5141f35938a18a48b1f314e46") && 
-          block.disabled === false
-        );
-      }
+    const themeResponse = await admin.graphql(
+      `#graphql
+      query {
+        themes(first: 10) {
+          nodes {
+            id
+            role
+            files(filenames: ["config/settings_data.json"]) {
+              nodes {
+                body {
+                  ... on OnlineStoreThemeFileBodyText {
+                    content
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`
+    );
+    const themeResponseJson = await themeResponse.json();
+    const themesNodes = themeResponseJson.data?.themes?.nodes || [];
+    const mainTheme = themesNodes.find((t: any) => t.role === "MAIN");
+
+    if (mainTheme && mainTheme.files?.nodes?.[0]?.body?.content) {
+      const content = mainTheme.files.nodes[0].body.content;
+      // Strip comments (e.g. // lines) before parsing JSON
+      const cleanJson = content.replace(/\/\/.*/g, "").trim();
+      const settings = JSON.parse(cleanJson);
+      const blocks = settings.current?.blocks || {};
+
+      isEmbedEnabled = Object.values(blocks).some((block: any) => 
+        block.type && 
+        block.type.includes("77aea4b5141f35938a18a48b1f314e46") && 
+        block.disabled === false
+      );
     }
   } catch (error) {
     console.error("Error checking theme app embed status:", error);
