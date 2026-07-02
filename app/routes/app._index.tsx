@@ -175,6 +175,11 @@ export default function Index() {
   const [step1Open, setStep1Open] = useState(true);
   const [step2Open, setStep2Open] = useState(false);
 
+  const handleReload = () => {
+    shopify.toast.show("Checking activation status...");
+    window.location.reload();
+  };
+
   return (
     <div className="dashboard-container">
       {/* Header Banner */}
@@ -293,17 +298,25 @@ export default function Index() {
                       Activate the widget by clicking the button below and then clicking "Save" on the Shopify theme editor page.
                     </p>
                   )}
-                  <a
-                    className="btn-primary"
-                    href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    {isEmbedEnabled ? "Manage App Embed" : "Activate App Embed"}
-                  </a>
+                  <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                    <a
+                      className="btn-primary"
+                      href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      {isEmbedEnabled ? "Manage App Embed" : "Activate App Embed"}
+                    </a>
+                    <button className="btn-secondary" onClick={handleReload}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m0 0H9" />
+                      </svg>
+                      Check Status
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
