@@ -105,6 +105,54 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const actionType = formData.get("actionType");
+
+  if (actionType === "verify_embed") {
+    let isEmbedEnabled = false;
+    try {
+      const themeResponse = await admin.graphql(
+        `#graphql
+        query {
+          themes(first: 10) {
+            nodes {
+              id
+              role
+              files(filenames: ["config/settings_data.json"]) {
+                nodes {
+                  body {
+                    ... on OnlineStoreThemeFileBodyText {
+                      content
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }`
+      );
+      const themeResponseJson = await themeResponse.json();
+      const themesNodes = themeResponseJson.data?.themes?.nodes || [];
+      const mainTheme = themesNodes.find((t: any) => t.role === "MAIN");
+
+      if (mainTheme && mainTheme.files?.nodes?.[0]?.body?.content) {
+        const content = mainTheme.files.nodes[0].body.content;
+        const cleanJson = content.replace(/\/\/.*/g, "").trim();
+        const settings = JSON.parse(cleanJson);
+        const blocks = settings.current?.blocks || {};
+
+        isEmbedEnabled = Object.values(blocks).some((block: any) => 
+          block.type && 
+          block.type.includes("77aea4b5141f35938a18a48b1f314e46") && 
+          block.disabled === false
+        );
+      }
+    } catch (error) {
+      console.error("Error checking theme app embed status in action:", error);
+    }
+    return { isEmbedEnabled, actionType: "verify_embed" };
+  }
+
   const color = ["Red", "Orange", "Yellow", "Green"][
     Math.floor(Math.random() * 4)
   ];
@@ -177,6 +225,7 @@ export default function Index() {
   const shopify = useAppBridge();
   
   const fetcher = useFetcher<typeof action>();
+  const verifyFetcher = useFetcher<typeof action>();
   const isLoading =
     ["loading", "submitting"].includes(fetcher.state) &&
     fetcher.formMethod === "POST";
@@ -187,19 +236,34 @@ export default function Index() {
     }
   }, [fetcher.data?.product?.id, shopify]);
 
+  // Local state to manage the dynamic embed state and warnings
+  const [embedActive, setEmbedActive] = useState(isEmbedEnabled);
+  const [verificationError, setVerificationError] = useState(false);
+
   // Accordion state
   const [step1Open, setStep1Open] = useState(!isEmbedEnabled);
   const [step2Open, setStep2Open] = useState(isEmbedEnabled);
 
   useEffect(() => {
-    if (isEmbedEnabled) {
-      shopify.toast.show("App Embed is Active! Next step: Create your first bundle.");
+    if (verifyFetcher.data && verifyFetcher.data.actionType === "verify_embed") {
+      const active = verifyFetcher.data.isEmbedEnabled;
+      if (active) {
+        setEmbedActive(true);
+        setStep1Open(false);
+        setStep2Open(true);
+        setVerificationError(false);
+        shopify.toast.show("App Embed activated successfully!");
+      } else {
+        setVerificationError(true);
+        shopify.toast.show("Verification failed. Please ensure the toggle is ON and Save.", { isError: true });
+      }
     }
-  }, [isEmbedEnabled, shopify]);
+  }, [verifyFetcher.data, shopify]);
 
-  const handleReload = () => {
-    shopify.toast.show("Verifying activation status...");
-    window.location.reload();
+  const handleVerify = () => {
+    const formData = new FormData();
+    formData.append("actionType", "verify_embed");
+    verifyFetcher.submit(formData, { method: "POST" });
   };
 
   return (
@@ -212,8 +276,8 @@ export default function Index() {
           </h1>
           <p className="welcome-subtitle">
             Owner of <strong>{shopName}</strong>
-            <span className={`status-dot ${isEmbedEnabled ? "active" : "inactive"}`}></span>
-            App Embed: {isEmbedEnabled ? "Active" : "Inactive"}
+            <span className={`status-dot ${embedActive ? "active" : "inactive"}`}></span>
+            App Embed: {embedActive ? "Active" : "Inactive"}
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
@@ -291,19 +355,19 @@ export default function Index() {
             <div className="setup-guide-progress">
               <div className="progress-header">
                 <span>App Setup Progress</span>
-                <span>{isEmbedEnabled ? "1 of 2" : "0 of 2"} steps completed</span>
+                <span>{embedActive ? "1 of 2" : "0 of 2"} steps completed</span>
               </div>
               <div className="progress-bar-bg">
-                <div className="progress-bar-fill" style={{ width: isEmbedEnabled ? "50%" : "0%" }}></div>
+                <div className="progress-bar-fill" style={{ width: embedActive ? "50%" : "0%" }}></div>
               </div>
             </div>
 
             {/* Step 1 */}
-            <div className={`setup-step ${isEmbedEnabled ? "completed" : ""} ${step1Open ? "active" : ""}`}>
-              <div className="setup-step-header" onClick={() => { setStep1Open(!step1Open); setStep2Open(isEmbedEnabled ? !step2Open : false); }}>
-                <span className="step-number">{isEmbedEnabled ? "✓" : "1"}</span>
+            <div className={`setup-step ${embedActive ? "completed" : ""} ${step1Open ? "active" : ""}`}>
+              <div className="setup-step-header" onClick={() => { setStep1Open(!step1Open); setStep2Open(embedActive ? !step2Open : false); }}>
+                <span className="step-number">{embedActive ? "✓" : "1"}</span>
                 <span className="step-title">
-                  1. Activate Bundlify Embed on storefront {isEmbedEnabled ? "(Active)" : "(Inactive)"}
+                  1. Activate Bundlify Embed on storefront {embedActive ? "(Active)" : "(Inactive)"}
                 </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ transform: step1Open ? "rotate(180deg)" : "rotate(0)" }}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -311,7 +375,26 @@ export default function Index() {
               </div>
               {step1Open && (
                 <div className="setup-step-content">
-                  {isEmbedEnabled ? (
+                  {verificationError && (
+                    <div style={{
+                      background: "#fef2f2",
+                      border: "1px solid #fee2e2",
+                      borderRadius: "6px",
+                      padding: "10px 12px",
+                      color: "#991b1b",
+                      fontSize: "12.5px",
+                      marginBottom: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>Please turn ON the "Bundlify Embed" switch in the theme editor and click <strong>Save</strong> before verifying!</span>
+                    </div>
+                  )}
+                  {embedActive ? (
                     <>
                       <p style={{ margin: "0 0 12px 0", color: "#10b981", fontWeight: 500 }}>
                         ✓ Bundlify Embed is currently active on your storefront. Your bundle deals are live.
@@ -347,11 +430,21 @@ export default function Index() {
                           </svg>
                           Activate App Embed
                         </a>
-                        <button className="btn-secondary" onClick={handleReload}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          I've Enabled It
+                        <button 
+                          className="btn-secondary" 
+                          onClick={handleVerify}
+                          disabled={verifyFetcher.state !== "idle"}
+                        >
+                          {verifyFetcher.state !== "idle" ? (
+                            <span>Verifying...</span>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              I've Enabled It
+                            </>
+                          )}
                         </button>
                       </div>
                     </>
