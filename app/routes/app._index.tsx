@@ -172,11 +172,17 @@ export default function Index() {
   }, [fetcher.data?.product?.id, shopify]);
 
   // Accordion state
-  const [step1Open, setStep1Open] = useState(true);
-  const [step2Open, setStep2Open] = useState(false);
+  const [step1Open, setStep1Open] = useState(!isEmbedEnabled);
+  const [step2Open, setStep2Open] = useState(isEmbedEnabled);
+
+  useEffect(() => {
+    if (isEmbedEnabled) {
+      shopify.toast.show("App Embed is Active! Next step: Create your first bundle.");
+    }
+  }, [isEmbedEnabled, shopify]);
 
   const handleReload = () => {
-    shopify.toast.show("Checking activation status...");
+    shopify.toast.show("Verifying activation status...");
     window.location.reload();
   };
 
@@ -269,16 +275,16 @@ export default function Index() {
             <div className="setup-guide-progress">
               <div className="progress-header">
                 <span>App Setup Progress</span>
-                <span>1 of 2 steps completed</span>
+                <span>{isEmbedEnabled ? "1 of 2" : "0 of 2"} steps completed</span>
               </div>
               <div className="progress-bar-bg">
-                <div className="progress-bar-fill" style={{ width: "50%" }}></div>
+                <div className="progress-bar-fill" style={{ width: isEmbedEnabled ? "50%" : "0%" }}></div>
               </div>
             </div>
 
             {/* Step 1 */}
             <div className={`setup-step ${isEmbedEnabled ? "completed" : ""} ${step1Open ? "active" : ""}`}>
-              <div className="setup-step-header" onClick={() => { setStep1Open(!step1Open); setStep2Open(false); }}>
+              <div className="setup-step-header" onClick={() => { setStep1Open(!step1Open); setStep2Open(isEmbedEnabled ? !step2Open : false); }}>
                 <span className="step-number">{isEmbedEnabled ? "✓" : "1"}</span>
                 <span className="step-title">
                   1. Activate Bundlify Embed on storefront {isEmbedEnabled ? "(Active)" : "(Inactive)"}
@@ -290,33 +296,50 @@ export default function Index() {
               {step1Open && (
                 <div className="setup-step-content">
                   {isEmbedEnabled ? (
-                    <p style={{ margin: "0 0 12px 0" }}>
-                      ✓ Bundlify Embed is currently active on your storefront. Your bundle deals will display at checkout.
-                    </p>
+                    <>
+                      <p style={{ margin: "0 0 12px 0", color: "#10b981", fontWeight: 500 }}>
+                        ✓ Bundlify Embed is currently active on your storefront. Your bundle deals are live.
+                      </p>
+                      <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                        <a
+                          className="btn-secondary"
+                          href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Manage App Embed
+                        </a>
+                      </div>
+                    </>
                   ) : (
-                    <p style={{ margin: "0 0 12px 0" }}>
-                      Activate the widget by clicking the button below and then clicking "Save" on the Shopify theme editor page.
-                    </p>
+                    <>
+                      <p style={{ margin: "0 0 12px 0" }}>
+                        Activate the widget by clicking the button below, turning it ON, and then clicking "Save" on the theme editor page.
+                      </p>
+                      <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                        <a
+                          className="btn-primary"
+                          href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Activate App Embed
+                        </a>
+                        <button className="btn-secondary" onClick={handleReload}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          I've Enabled It
+                        </button>
+                      </div>
+                    </>
                   )}
-                  <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
-                    <a
-                      className="btn-primary"
-                      href={`https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=77aea4b5141f35938a18a48b1f314e46/app-embed`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                      {isEmbedEnabled ? "Manage App Embed" : "Activate App Embed"}
-                    </a>
-                    <button className="btn-secondary" onClick={handleReload}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m0 0H9" />
-                      </svg>
-                      Check Status
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
