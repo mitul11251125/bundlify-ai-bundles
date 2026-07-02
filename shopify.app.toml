@@ -25,3 +25,5 @@ redirect_urls = [ "https://bundlify-ai-bundles-69a6.vercel.app/api/auth" ]
 
 [build]
 automatically_update_urls_on_dev = true
+
+# Public Repository Auto-Deploy Test
