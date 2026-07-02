@@ -296,9 +296,9 @@ export default function Index() {
               <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 180 120" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="vidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1e1b4b" />
-                    <stop offset="50%" stopColor="#4f46e5" />
-                    <stop offset="100%" stopColor="#7c3aed" />
+                    <stop offset="0%" stopColor="#3f3f46" />
+                    <stop offset="50%" stopColor="#27272a" />
+                    <stop offset="100%" stopColor="#18181b" />
                   </linearGradient>
                 </defs>
                 <rect width="180" height="120" fill="url(#vidGrad)" />
