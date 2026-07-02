@@ -292,7 +292,12 @@ export default function Index() {
 
           {/* Video Tutorial Card */}
           <div className="video-card">
-            <div className="video-thumbnail-container" onClick={() => shopify.toast.show("Video Tutorial Loading...")}>
+            <a
+              className="video-thumbnail-container"
+              href="https://youtu.be/rgZU5pDf6mw"
+              target="_blank"
+              rel="noreferrer"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 180 120" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="vidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -310,19 +315,21 @@ export default function Index() {
                 </svg>
               </div>
               <div className="duration-badge">2:36</div>
-            </div>
+            </a>
             <div className="video-info">
               <h3 className="video-title">Let's create your first bundle deal together</h3>
               <p className="video-desc">
                 In this 2 minute video co-founder Mitul shows you how easy it is to create a bundle deal with Bundlify.
               </p>
-              <button
+              <a
                 className="btn-secondary"
-                style={{ padding: "6px 12px", fontSize: "12px", width: "max-content" }}
-                onClick={() => shopify.toast.show("Video Tutorial Starting...")}
+                style={{ padding: "6px 12px", fontSize: "12px", width: "max-content", display: "inline-flex", alignItems: "center" }}
+                href="https://youtu.be/rgZU5pDf6mw"
+                target="_blank"
+                rel="noreferrer"
               >
                 Watch Video
-              </button>
+              </a>
             </div>
           </div>
         </div>
