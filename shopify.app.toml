@@ -2,7 +2,7 @@
 
 client_id = "77aea4b5141f35938a18a48b1f314e46"
 name = "Bundlify: AI Bundles"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://bundlify-ai-bundles-69a6.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -21,8 +21,7 @@ api_version = "2026-10"
   topics = [ "app/scopes_update" ]
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "https://bundlify-ai-bundles-69a6.vercel.app/api/auth" ]
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
