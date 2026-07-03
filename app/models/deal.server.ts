@@ -113,13 +113,22 @@ export interface CreateDealInput {
   status?: string;
   startDate?: Date;
   endDate?: Date | null;
+  markets?: string;
+  excludeB2B?: boolean;
+  applyDiscountOnlyViaWidget?: boolean;
+
   showPricePerItem?: boolean;
   useCompareAtPrice?: boolean;
+  showPricesWithoutDecimals?: boolean;
+  priceRounding?: boolean;
+  updateThemeProductPrice?: boolean;
   skipCart?: boolean;
+
   allowVariantPerItem?: boolean;
   showVariantForSingle?: boolean;
   hideThemeVariantPicker?: boolean;
   hideUnavailableVariants?: boolean;
+  dontUpdateOtherProducts?: boolean;
 
   // Countdown Timer
   countdownEnabled?: boolean;
@@ -145,6 +154,7 @@ export interface CreateDealInput {
   stickyEnabled?: boolean;
   stickyText?: string;
   stickyBtnText?: string;
+  lowStockAlert?: boolean;
 }
 
 

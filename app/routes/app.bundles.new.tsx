@@ -143,6 +143,31 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       excludeIds: [],
       status,
 
+      // Visibility & Settings
+      excludeB2B: formData.get("excludeB2B") === "true",
+      applyDiscountOnlyViaWidget: formData.get("applyDiscountOnlyViaWidget") === "true",
+      markets: formData.get("markets") as string || "all",
+
+      // Dates
+      startDate: new Date(formData.get("startDate") as string),
+      endDate: formData.get("setEndDate") === "true" && formData.get("endDate")
+        ? new Date(formData.get("endDate") as string)
+        : null,
+
+      // Pricing options
+      showPricePerItem: formData.get("showPricePerItem") === "true",
+      useCompareAtPrice: formData.get("useCompareAtPrice") === "true",
+      showPricesWithoutDecimals: formData.get("showPricesWithoutDecimals") === "true",
+      priceRounding: formData.get("priceRounding") === "true",
+      updateThemeProductPrice: formData.get("updateThemeProductPrice") === "true",
+      skipCart: formData.get("skipCart") === "true",
+
+      // Variant options  
+      allowVariantPerItem: formData.get("allowVariantPerItem") === "true",
+      hideThemeVariantPicker: formData.get("hideThemeVariantPicker") === "true",
+      hideUnavailableVariants: formData.get("hideUnavailableVariants") === "true",
+      dontUpdateOtherProducts: formData.get("dontUpdateOtherProducts") === "true",
+
       // Countdown Timer
       countdownEnabled: formData.get("countdownEnabled") === "true",
       countdownType: formData.get("countdownType") as string || "fixed",
@@ -167,6 +192,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       stickyEnabled: formData.get("stickyEnabled") === "true",
       stickyText: formData.get("stickyText") as string || "Grab this bundle deal now!",
       stickyBtnText: formData.get("stickyBtnText") as string || "Add bundle",
+      lowStockAlert: formData.get("lowStockAlert") === "true",
     };
 
     const tiersForDB = tiers.map((t: TierLocal, i: number) => ({
@@ -367,6 +393,35 @@ export default function BundleConfigurator() {
   const [stickyText, setStickyText] = useState(deal?.stickyText || "Grab this bundle deal now!");
   const [stickyBtnText, setStickyBtnText] = useState(deal?.stickyBtnText || "Add bundle");
 
+  // ── Visibility & Settings states ──
+  const [excludeB2B, setExcludeB2B] = useState(deal?.excludeB2B || false);
+  const [applyDiscountOnlyViaWidget, setApplyDiscountOnlyViaWidget] = useState(deal?.applyDiscountOnlyViaWidget || false);
+  const [markets, setMarkets] = useState(deal?.markets || "all");
+
+  // ── Active dates states ──
+  const [startDate, setStartDate] = useState(deal?.startDate ? new Date(deal.startDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]);
+  const [startTime, setStartTime] = useState(deal?.startDate ? new Date(deal.startDate).toTimeString().slice(0, 5) : "12:00");
+  const [setEndDate, setSetEndDate] = useState(!!deal?.endDate);
+  const [endDate, setEndDateVal] = useState(deal?.endDate ? new Date(deal.endDate).toISOString().split("T")[0] : new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0]);
+  const [endTime, setEndTimeVal] = useState(deal?.endDate ? new Date(deal.endDate).toTimeString().slice(0, 5) : "12:00");
+
+  // ── Variants states ──
+  const [allowVariantPerItem, setAllowVariantPerItem] = useState(deal?.allowVariantPerItem ?? true);
+  const [hideThemeVariantPicker, setHideThemeVariantPicker] = useState(deal?.hideThemeVariantPicker || false);
+  const [hideUnavailableVariants, setHideUnavailableVariants] = useState(deal?.hideUnavailableVariants || false);
+  const [dontUpdateOtherProducts, setDontUpdateOtherProducts] = useState(deal?.dontUpdateOtherProducts || false);
+
+  // ── Pricing states ──
+  const [showPricePerItem, setShowPricePerItem] = useState(deal?.showPricePerItem || false);
+  const [useCompareAtPrice, setUseCompareAtPrice] = useState(deal?.useCompareAtPrice ?? true);
+  const [showPricesWithoutDecimals, setShowPricesWithoutDecimals] = useState(deal?.showPricesWithoutDecimals || false);
+  const [priceRounding, setPriceRounding] = useState(deal?.priceRounding || false);
+  const [updateThemeProductPrice, setUpdateThemeProductPrice] = useState(deal?.updateThemeProductPrice || false);
+
+  // ── Cart & Alerts states ──
+  const [skipCart, setSkipCart] = useState(deal?.skipCart || false);
+  const [lowStockAlert, setLowStockAlert] = useState(deal?.lowStockAlert || false);
+
   const [volumeDiscountEnabled, setVolumeDiscountEnabled] = useState(false);
   const [scratchOffEnabled, setScratchOffEnabled] = useState(false);
   const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(false);
@@ -545,6 +600,37 @@ export default function BundleConfigurator() {
       fd.append("stickyText", stickyText);
       fd.append("stickyBtnText", stickyBtnText);
 
+      // Visibility & Settings
+      fd.append("excludeB2B", String(excludeB2B));
+      fd.append("applyDiscountOnlyViaWidget", String(applyDiscountOnlyViaWidget));
+      fd.append("markets", markets);
+
+      // Dates
+      const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
+      fd.append("startDate", startDateTime);
+      fd.append("setEndDate", String(setEndDate));
+      if (setEndDate) {
+        const endDateTime = new Date(`${endDate}T${endTime}:00`).toISOString();
+        fd.append("endDate", endDateTime);
+      }
+
+      // Variants
+      fd.append("allowVariantPerItem", String(allowVariantPerItem));
+      fd.append("hideThemeVariantPicker", String(hideThemeVariantPicker));
+      fd.append("hideUnavailableVariants", String(hideUnavailableVariants));
+      fd.append("dontUpdateOtherProducts", String(dontUpdateOtherProducts));
+
+      // Pricing
+      fd.append("showPricePerItem", String(showPricePerItem));
+      fd.append("useCompareAtPrice", String(useCompareAtPrice));
+      fd.append("showPricesWithoutDecimals", String(showPricesWithoutDecimals));
+      fd.append("priceRounding", String(priceRounding));
+      fd.append("updateThemeProductPrice", String(updateThemeProductPrice));
+
+      // Cart & Alert
+      fd.append("skipCart", String(skipCart));
+      fd.append("lowStockAlert", String(lowStockAlert));
+
       submit(fd, { method: "POST" });
 
       shopify.toast.show(intentVal === "publish" ? "Deal published!" : "Draft saved!");
@@ -581,6 +667,25 @@ export default function BundleConfigurator() {
       stickyEnabled,
       stickyText,
       stickyBtnText,
+      excludeB2B,
+      applyDiscountOnlyViaWidget,
+      markets,
+      startDate,
+      startTime,
+      setEndDate,
+      endDate,
+      endTime,
+      allowVariantPerItem,
+      hideThemeVariantPicker,
+      hideUnavailableVariants,
+      dontUpdateOtherProducts,
+      showPricePerItem,
+      useCompareAtPrice,
+      showPricesWithoutDecimals,
+      priceRounding,
+      updateThemeProductPrice,
+      skipCart,
+      lowStockAlert,
       shopify,
       navigate,
       submit,
@@ -868,18 +973,178 @@ export default function BundleConfigurator() {
             </div>
             {openSection === "settings" && (
               <div style={contentBlockStyle}>
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={labelStyle}>Internal Name</label>
+                
+                {/* Internal Name */}
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={labelStyle}>Name (only visible for you)</label>
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
                 </div>
-                <div style={{ marginBottom: "12px" }}>
-                  <label style={labelStyle}>Block Title (Storefront)</label>
+
+                {/* Block Title */}
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={labelStyle}>Block title</label>
                   <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} style={inputStyle} />
                 </div>
-                <div>
-                  <label style={labelStyle}>Discount Title (In Cart)</label>
+
+                {/* Discount Name */}
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={labelStyle}>Discount name (shown in cart/checkout)</label>
                   <input type="text" value={discountName} onChange={(e) => setDiscountName(e.target.value)} style={inputStyle} />
                 </div>
+
+                {/* Visibility */}
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "20px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Visibility</div>
+                  <div style={{ marginBottom: "12px" }}>
+                    <label style={labelStyle}>Markets</label>
+                    <select value={markets} onChange={(e) => setMarkets(e.target.value)} style={inputStyle}>
+                      <option value="all">All</option>
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={excludeB2B} onChange={(e) => setExcludeB2B(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Exclude B2B customers <span style={{ color: "#8c9196", cursor: "help" }} title="Do not apply discounts for B2B orders">ⓘ</span>
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={applyDiscountOnlyViaWidget} onChange={(e) => setApplyDiscountOnlyViaWidget(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Apply discount only via bundle widget <span style={{ color: "#8c9196", cursor: "help" }} title="Discounts are only applied when items are added via the widget">ⓘ</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Active Dates */}
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "20px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Active dates</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                    <div>
+                      <label style={labelStyle}>Start date</label>
+                      <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Start time (GMT+5:30)</label>
+                      <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={inputStyle} />
+                    </div>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                    <input type="checkbox" checked={setEndDate} onChange={(e) => setSetEndDate(e.target.checked)} style={{ accentColor: "#000" }} />
+                    Set end date
+                  </label>
+                  {setEndDate && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "12px" }}>
+                      <div>
+                        <label style={labelStyle}>End date</label>
+                        <input type="date" value={endDate} onChange={(e) => setEndDateVal(e.target.value)} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>End time (GMT+5:30)</label>
+                        <input type="time" value={endTime} onChange={(e) => setEndTimeVal(e.target.value)} style={inputStyle} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Variants */}
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "20px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Variants</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={allowVariantPerItem} onChange={(e) => setAllowVariantPerItem(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Let customers choose different variants for each item <span style={{ color: "#8c9196", cursor: "help" }} title="Allow variant selections for each individual item in a bundle">ⓘ</span>
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={hideThemeVariantPicker} onChange={(e) => setHideThemeVariantPicker(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Hide theme variant picker
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={hideUnavailableVariants} onChange={(e) => setHideUnavailableVariants(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Hide unavailable variant options
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={dontUpdateOtherProducts} onChange={(e) => setDontUpdateOtherProducts(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Don't update other products when a variant is selected
+                    </label>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <button
+                      type="button"
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "6px",
+                        padding: "8px 12px",
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "#1a1a1a",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px"
+                      }}
+                      onClick={() => shopify.toast.show("Add Swatches clicked")}
+                    >
+                      🎨 Add swatches
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "6px",
+                        padding: "8px 12px",
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "#1a1a1a",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px"
+                      }}
+                      onClick={() => shopify.toast.show("Set Default Variants clicked")}
+                    >
+                      🎛️ Set default variants
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pricing */}
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "20px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Pricing</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={showPricePerItem} onChange={(e) => setShowPricePerItem(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Show prices per item
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={useCompareAtPrice} onChange={(e) => setUseCompareAtPrice(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Use product compare-at price <span style={{ color: "#8c9196", cursor: "help" }} title="Show comparison scratch-off pricing based on product compare-at prices">ⓘ</span>
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={showPricesWithoutDecimals} onChange={(e) => setShowPricesWithoutDecimals(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Show prices without decimals
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={priceRounding} onChange={(e) => setPriceRounding(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Price rounding
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                      <input type="checkbox" checked={updateThemeProductPrice} onChange={(e) => setUpdateThemeProductPrice(e.target.checked)} style={{ accentColor: "#000" }} />
+                      Update theme product price
+                    </label>
+                  </div>
+                </div>
+
+                {/* Cart */}
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Cart</div>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", color: "#1a1a1a" }}>
+                    <input type="checkbox" checked={skipCart} onChange={(e) => setSkipCart(e.target.checked)} style={{ accentColor: "#000" }} />
+                    Skip cart and go to checkout directly
+                  </label>
+                </div>
+
               </div>
             )}
           </div>
@@ -1313,6 +1578,19 @@ export default function BundleConfigurator() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Toggle: Low stock alert */}
+            <div style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, color: "#1a1a1a" }}>
+                  <span>⚠️</span> Low stock alert
+                </div>
+                <label className="bundlify-switch">
+                  <input type="checkbox" checked={lowStockAlert} onChange={(e) => setLowStockAlert(e.target.checked)} />
+                  <span className="bundlify-slider"></span>
+                </label>
+              </div>
             </div>
 
           </div>

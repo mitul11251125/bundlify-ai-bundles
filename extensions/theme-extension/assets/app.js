@@ -244,6 +244,11 @@
         pct = Math.round(((originalTotal - discountedTotal) / originalTotal) * 100);
       }
 
+      // Price rounding psychology trick: ends in .99
+      if (deal.priceRounding && pct > 0) {
+        discountedTotal = Math.round(discountedTotal) - 0.01;
+      }
+
       if (pct > 0) {
         const saveBadge = document.createElement("span");
         saveBadge.className = "bundlify-tier-save-badge";
@@ -258,13 +263,37 @@
       
       const priceDisplay = document.createElement("div");
       priceDisplay.className = "bundlify-price-display";
-      priceDisplay.textContent = `$${discountedTotal.toFixed(2)}`;
+
+      let displayPriceStr = "";
+      let originalPriceStr = "";
+
+      if (deal.showPricePerItem) {
+        const perItemPrice = discountedTotal / tier.quantity;
+        const perItemOrig = originalTotal / tier.quantity;
+        if (deal.showPricesWithoutDecimals) {
+          displayPriceStr = `$${Math.round(perItemPrice)}/item`;
+          originalPriceStr = `$${Math.round(perItemOrig)}`;
+        } else {
+          displayPriceStr = `$${perItemPrice.toFixed(2)}/item`;
+          originalPriceStr = `$${perItemOrig.toFixed(2)}`;
+        }
+      } else {
+        if (deal.showPricesWithoutDecimals) {
+          displayPriceStr = `$${Math.round(discountedTotal)}`;
+          originalPriceStr = `$${Math.round(originalTotal)}`;
+        } else {
+          displayPriceStr = `$${discountedTotal.toFixed(2)}`;
+          originalPriceStr = `$${originalTotal.toFixed(2)}`;
+        }
+      }
+      
+      priceDisplay.textContent = displayPriceStr;
       priceGroup.appendChild(priceDisplay);
 
       if (pct > 0) {
         const originalPrice = document.createElement("div");
         originalPrice.className = "bundlify-original-price";
-        originalPrice.textContent = `$${originalTotal.toFixed(2)}`;
+        originalPrice.textContent = originalPriceStr;
         priceGroup.appendChild(originalPrice);
       }
       row.appendChild(priceGroup);
@@ -401,7 +430,32 @@
     // C. Inject widget right above the Add to Cart button
     atcButton.parentNode.insertBefore(widgetContainer, atcButton);
     
-    // D. Initial setup on load
+    // D. Skip Cart redirection handling
+    const productFormEl = document.querySelector('form[action="/cart/add"]');
+    if (deal.skipCart && productFormEl) {
+      productFormEl.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(productFormEl);
+        
+        if (atcButton) {
+          atcButton.disabled = true;
+          atcButton.textContent = "Redirecting to checkout...";
+        }
+
+        fetch("/cart/add.js", {
+          method: "POST",
+          body: formData
+        })
+        .then(() => {
+          window.location.href = "/checkout";
+        })
+        .catch(() => {
+          window.location.href = "/checkout";
+        });
+      });
+    }
+
+    // E. Initial setup on load
     updateShopifyATCBehavior(deal, deal.tiers[selectedTierIndex]);
   }
 

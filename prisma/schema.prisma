@@ -54,10 +54,14 @@ model Deal {
   endDate     DateTime?
   markets     String   @default("all")
   excludeB2B  Boolean  @default(false)
+  applyDiscountOnlyViaWidget Boolean @default(false)
 
   // Pricing options
   showPricePerItem      Boolean @default(false)
   useCompareAtPrice     Boolean @default(true)
+  showPricesWithoutDecimals Boolean @default(false)
+  priceRounding         Boolean @default(false)
+  updateThemeProductPrice Boolean @default(false)
   skipCart              Boolean @default(false)
 
   // Variant options  
@@ -65,6 +69,7 @@ model Deal {
   showVariantForSingle  Boolean @default(true)
   hideThemeVariantPicker Boolean @default(false)
   hideUnavailableVariants Boolean @default(false)
+  dontUpdateOtherProducts Boolean @default(false)
 
   // Countdown Timer
   countdownEnabled      Boolean @default(false)
@@ -90,6 +95,7 @@ model Deal {
   stickyEnabled         Boolean @default(false)
   stickyText            String  @default("Grab this bundle deal now!")
   stickyBtnText         String  @default("Add bundle")
+  lowStockAlert         Boolean @default(false)
 
   // Shopify discount GID (created when published)
   shopifyDiscountId String?
