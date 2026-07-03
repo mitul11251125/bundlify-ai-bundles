@@ -4,7 +4,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useFetcher, useLoaderData } from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -234,6 +234,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 export default function Index() {
   const { shopName, ownerName, shopDomain, storeHandle, isEmbedEnabled } = useLoaderData<typeof loader>();
   const shopify = useAppBridge();
+  const navigate = useNavigate();
   
   const fetcher = useFetcher<typeof action>();
   const verifyFetcher = useFetcher<typeof action>();
@@ -426,7 +427,7 @@ export default function Index() {
                   <p style={{ margin: "0 0 12px 0" }}>
                     Setup quantity discount tiers or product bundles for your items to grow AOV.
                   </p>
-                  <button className="btn-secondary" onClick={() => shopify.toast.show("Create Bundle Deal Clicked")}>
+                  <button className="btn-secondary" onClick={() => navigate("/app/create-deal")}>
                     Create Bundle Deal
                   </button>
                 </div>
@@ -493,7 +494,7 @@ export default function Index() {
                 This is where you'll create bundle deals for different products and manage them.
               </p>
               <div className="empty-deals-action">
-                <button className="btn-glow" onClick={() => shopify.toast.show("Create Bundle Deal Triggered")}>
+                <button className="btn-glow" onClick={() => navigate("/app/create-deal")}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
