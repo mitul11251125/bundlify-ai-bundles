@@ -13,20 +13,20 @@ import {
 } from "../models/deal.server";
 
 // Import custom icons
-import eyeIcon from "../../src/icons/eye.png?dataurl";
-import questionIcon from "../../src/icons/question.png?dataurl";
-import settingsIcon from "../../src/icons/settings.png?dataurl";
-import gridIcon from "../../src/icons/grid.png?dataurl";
-import megaphoneIcon from "../../src/icons/megaphone.png?dataurl";
-import plusIcon from "../../src/icons/plus.png?dataurl";
-import checkIcon from "../../src/icons/check.png?dataurl";
-import lockIcon from "../../src/icons/lock.png?dataurl";
-import globeIcon from "../../src/icons/globe.png?dataurl";
-import powerIcon from "../../src/icons/power.png?dataurl";
-import starIcon from "../../src/icons/star.png?dataurl";
-import coinsIcon from "../../src/icons/coins.png?dataurl";
-import groupIcon from "../../src/icons/group.png?dataurl";
-import listIcon from "../../src/icons/list.png?dataurl";
+import eyeIcon from "../icons/eye.png?dataurl";
+import questionIcon from "../icons/question.png?dataurl";
+import settingsIcon from "../icons/settings.png?dataurl";
+import gridIcon from "../icons/grid.png?dataurl";
+import megaphoneIcon from "../icons/megaphone.png?dataurl";
+import plusIcon from "../icons/plus.png?dataurl";
+import checkIcon from "../icons/check.png?dataurl";
+import lockIcon from "../icons/lock.png?dataurl";
+import globeIcon from "../icons/globe.png?dataurl";
+import powerIcon from "../icons/power.png?dataurl";
+import starIcon from "../icons/star.png?dataurl";
+import coinsIcon from "../icons/coins.png?dataurl";
+import groupIcon from "../icons/group.png?dataurl";
+import listIcon from "../icons/list.png?dataurl";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
