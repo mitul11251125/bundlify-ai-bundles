@@ -66,6 +66,31 @@ model Deal {
   hideThemeVariantPicker Boolean @default(false)
   hideUnavailableVariants Boolean @default(false)
 
+  // Countdown Timer
+  countdownEnabled      Boolean @default(false)
+  countdownType         String  @default("fixed")
+  countdownText         String  @default("Limited time offer ends in {{timer}}!")
+  countdownDuration     Int     @default(15)
+  countdownColor        String  @default("#ef4444")
+  countdownBg           String  @default("#fef2f2")
+
+  // Checkbox Upsells
+  upsellsEnabled        Boolean @default(false)
+  upsellProduct         String  @default("Extra Protection Warranty")
+  upsellPrice           Float   @default(4.99)
+  upsellText            String  @default("Add {{product}} for just ${{price}}")
+
+  // Progressive Gifts
+  giftsEnabled          Boolean @default(false)
+  giftThreshold         Float   @default(75.0)
+  giftProduct           String  @default("Free Ceramic Spoon")
+  giftText              String  @default("Spend ${{remaining}} more to get a {{gift}}!")
+
+  // Sticky Cart
+  stickyEnabled         Boolean @default(false)
+  stickyText            String  @default("Grab this bundle deal now!")
+  stickyBtnText         String  @default("Add bundle")
+
   // Shopify discount GID (created when published)
   shopifyDiscountId String?
 

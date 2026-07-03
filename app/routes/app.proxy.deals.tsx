@@ -24,7 +24,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   };
 
   // Validate that the request is from Shopify (HMAC check)
-  const { session } = await authenticate.public.appProxy(request);
+  const { session, admin } = await authenticate.public.appProxy(request);
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
@@ -41,7 +41,35 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Handle /apps/bundlify/deal?product_id=...
   if (productId) {
     try {
-      const deal = await getActiveDealForProduct(shop, productId);
+      let collectionIds: string[] = [];
+      if (admin) {
+        try {
+          const collectionsResponse = await admin.graphql(
+            `#graphql
+            query getProductCollections($id: ID!) {
+              product(id: $id) {
+                collections(first: 50) {
+                  nodes {
+                    id
+                  }
+                }
+              }
+            }`,
+            {
+              variables: {
+                id: productId,
+              },
+            }
+          );
+          const collectionsJson = await collectionsResponse.json();
+          const collections = collectionsJson.data?.product?.collections?.nodes || [];
+          collectionIds = collections.map((c: any) => c.id);
+        } catch (colErr) {
+          console.error("[App Proxy] Error querying product collections:", colErr);
+        }
+      }
+
+      const deal = await getActiveDealForProduct(shop, productId, collectionIds);
 
       if (!deal) {
         return new Response(JSON.stringify({ deal: null }), {
@@ -62,6 +90,31 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         showVariantForSingle: deal.showVariantForSingle,
         hideThemeVariantPicker: deal.hideThemeVariantPicker,
         hideUnavailableVariants: deal.hideUnavailableVariants,
+
+        // Countdown Timer
+        countdownEnabled: deal.countdownEnabled,
+        countdownType: deal.countdownType,
+        countdownText: deal.countdownText,
+        countdownDuration: deal.countdownDuration,
+        countdownColor: deal.countdownColor,
+        countdownBg: deal.countdownBg,
+
+        // Checkbox Upsells
+        upsellsEnabled: deal.upsellsEnabled,
+        upsellProduct: deal.upsellProduct,
+        upsellPrice: deal.upsellPrice,
+        upsellText: deal.upsellText,
+
+        // Progressive Gifts
+        giftsEnabled: deal.giftsEnabled,
+        giftThreshold: deal.giftThreshold,
+        giftProduct: deal.giftProduct,
+        giftText: deal.giftText,
+
+        // Sticky Cart
+        stickyEnabled: deal.stickyEnabled,
+        stickyText: deal.stickyText,
+        stickyBtnText: deal.stickyBtnText,
         tiers: deal.tiers.map((t: any) => ({
           id: t.id,
           position: t.position,

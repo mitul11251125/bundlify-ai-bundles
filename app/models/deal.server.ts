@@ -36,7 +36,7 @@ export async function getDealById(id: string, shop: string) {
  * 
  * Priority: most-recently-updated active deal that targets this product.
  */
-export async function getActiveDealForProduct(shop: string, productId: string) {
+export async function getActiveDealForProduct(shop: string, productId: string, collectionIds: string[] = []) {
   const now = new Date();
 
   // 1. Try product-specific deal
@@ -57,7 +57,27 @@ export async function getActiveDealForProduct(shop: string, productId: string) {
   });
   if (productDeal) return productDeal;
 
-  // 2. Fall back to "all products" deal
+  // 2. Try collection-specific deal
+  if (collectionIds.length > 0) {
+    const collectionDeal = await db.deal.findFirst({
+      where: {
+        shop,
+        status: "active",
+        targetType: "collections",
+        targetIds: { hasSome: collectionIds },
+        startDate: { lte: now },
+        OR: [{ endDate: null }, { endDate: { gte: now } }],
+      },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        tiers: { orderBy: { position: "asc" } },
+        style: true,
+      },
+    });
+    if (collectionDeal) return collectionDeal;
+  }
+
+  // 3. Fall back to "all products" deal
   const allDeal = await db.deal.findFirst({
     where: {
       shop,
@@ -100,7 +120,33 @@ export interface CreateDealInput {
   showVariantForSingle?: boolean;
   hideThemeVariantPicker?: boolean;
   hideUnavailableVariants?: boolean;
+
+  // Countdown Timer
+  countdownEnabled?: boolean;
+  countdownType?: string;
+  countdownText?: string;
+  countdownDuration?: number;
+  countdownColor?: string;
+  countdownBg?: string;
+
+  // Checkbox Upsells
+  upsellsEnabled?: boolean;
+  upsellProduct?: string;
+  upsellPrice?: number;
+  upsellText?: string;
+
+  // Progressive Gifts
+  giftsEnabled?: boolean;
+  giftThreshold?: number;
+  giftProduct?: string;
+  giftText?: string;
+
+  // Sticky Cart
+  stickyEnabled?: boolean;
+  stickyText?: string;
+  stickyBtnText?: string;
 }
+
 
 export interface TierInput {
   label: string;

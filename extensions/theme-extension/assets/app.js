@@ -105,6 +105,57 @@
     `;
     widgetContainer.setAttribute("style", cssVars);
 
+    // ── Progressive Gifts Banner ──
+    if (deal.giftsEnabled) {
+      const giftWrapper = document.createElement("div");
+      giftWrapper.id = "bundlify-gifts-milestone-wrapper";
+      giftWrapper.style.padding = "10px 14px";
+      giftWrapper.style.background = "#f8fafc";
+      giftWrapper.style.border = "1px solid #e2e8f0";
+      giftWrapper.style.borderRadius = `${style.cornerRadius || 8}px`;
+      giftWrapper.style.marginBottom = "14px";
+      giftWrapper.style.fontFamily = "inherit";
+      widgetContainer.appendChild(giftWrapper);
+    }
+
+    // ── Countdown Banner ──
+    if (deal.countdownEnabled) {
+      const countdownBanner = document.createElement("div");
+      countdownBanner.style.background = deal.countdownBg || "#fef2f2";
+      countdownBanner.style.color = deal.countdownColor || "#ef4444";
+      countdownBanner.style.padding = "8px 12px";
+      countdownBanner.style.borderRadius = `${style.cornerRadius || 6}px`;
+      countdownBanner.style.fontSize = "13px";
+      countdownBanner.style.fontWeight = "600";
+      countdownBanner.style.textAlign = "center";
+      countdownBanner.style.marginBottom = "12px";
+      countdownBanner.style.border = `1px solid ${deal.countdownColor || "#ef4444"}33`;
+      
+      let durationSeconds = (deal.countdownDuration || 15) * 60;
+      const timerSpan = document.createElement("span");
+      
+      const updateTimerDisplay = () => {
+        const mins = Math.floor(durationSeconds / 60);
+        const secs = durationSeconds % 60;
+        const timeStr = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+        countdownBanner.textContent = `⏱️ ` + (deal.countdownText || "Limited time offer ends in {{timer}}!").replace("{{timer}}", timeStr);
+      };
+      
+      updateTimerDisplay();
+      
+      const interval = setInterval(() => {
+        if (durationSeconds <= 0) {
+          clearInterval(interval);
+          countdownBanner.style.display = "none";
+          return;
+        }
+        durationSeconds--;
+        updateTimerDisplay();
+      }, 1000);
+      
+      widgetContainer.appendChild(countdownBanner);
+    }
+
     // A. Block Title
     const titleWrapper = document.createElement("div");
     titleWrapper.className = "bundlify-block-title-wrapper";
@@ -247,6 +298,106 @@
     rows.forEach((row) => tiersList.appendChild(row));
     widgetContainer.appendChild(tiersList);
 
+    // ── Checkbox Upsells Banner ──
+    if (deal.upsellsEnabled) {
+      const upsellCard = document.createElement("div");
+      upsellCard.style.marginTop = "12px";
+      upsellCard.style.padding = "10px 12px";
+      upsellCard.style.border = "1px solid #e4e4e7";
+      upsellCard.style.borderRadius = `${style.cornerRadius || 8}px`;
+      upsellCard.style.background = "#fdfdfd";
+      upsellCard.style.display = "flex";
+      upsellCard.style.alignItems = "center";
+      upsellCard.style.gap = "10px";
+      upsellCard.style.cursor = "pointer";
+      upsellCard.style.userSelect = "none";
+      upsellCard.style.fontFamily = "inherit";
+
+      const upsellCheckbox = document.createElement("input");
+      upsellCheckbox.type = "checkbox";
+      upsellCheckbox.checked = true;
+      upsellCheckbox.style.accentColor = style.borderColor || "#000000";
+      upsellCheckbox.style.width = "16px";
+      upsellCheckbox.style.height = "16px";
+      upsellCheckbox.style.cursor = "pointer";
+      upsellCard.appendChild(upsellCheckbox);
+
+      const upsellLabel = document.createElement("div");
+      upsellLabel.style.flex = "1";
+      upsellLabel.style.fontSize = "13px";
+      upsellLabel.style.color = "#18181b";
+      upsellLabel.style.fontWeight = "500";
+      
+      const upsellProduct = deal.upsellProduct || "Extra Protection Warranty";
+      const upsellPrice = deal.upsellPrice || 4.99;
+      upsellLabel.textContent = (deal.upsellText || "Add {{product}} for just ${{price}}")
+        .replace("{{product}}", upsellProduct)
+        .replace("{{price}}", upsellPrice.toFixed(2));
+      upsellCard.appendChild(upsellLabel);
+
+      // Toggle checkbox checked on card click
+      upsellCard.addEventListener("click", () => {
+        upsellCheckbox.checked = !upsellCheckbox.checked;
+        updateUpsellProductProperties(upsellCheckbox.checked, upsellProduct, upsellPrice);
+      });
+      upsellCheckbox.addEventListener("click", (e) => {
+        e.stopPropagation();
+        updateUpsellProductProperties(upsellCheckbox.checked, upsellProduct, upsellPrice);
+      });
+
+      widgetContainer.appendChild(upsellCard);
+    }
+
+    // ── Sticky Cart Bar ──
+    if (deal.stickyEnabled) {
+      const stickyBar = document.createElement("div");
+      stickyBar.style.position = "fixed";
+      stickyBar.style.bottom = "0";
+      stickyBar.style.left = "0";
+      stickyBar.style.width = "100%";
+      stickyBar.style.background = "#ffffff";
+      stickyBar.style.borderTop = "2px solid #09090b";
+      stickyBar.style.padding = "12px 24px";
+      stickyBar.style.display = "flex";
+      stickyBar.style.alignItems = "center";
+      stickyBar.style.justifyContent = "space-between";
+      stickyBar.style.boxShadow = "0 -4px 16px rgba(0,0,0,0.1)";
+      stickyBar.style.zIndex = "9999";
+      stickyBar.style.fontFamily = "inherit";
+      stickyBar.style.boxSizing = "border-box";
+
+      const stickyTitle = document.createElement("div");
+      stickyTitle.style.fontWeight = "600";
+      stickyTitle.style.fontSize = "14px";
+      stickyTitle.style.color = "#18181b";
+      stickyTitle.textContent = deal.stickyText || "Grab this bundle deal now!";
+      stickyBar.appendChild(stickyTitle);
+
+      const stickyBtn = document.createElement("button");
+      stickyBtn.style.background = "#09090b";
+      stickyBtn.style.color = "#ffffff";
+      stickyBtn.style.border = "none";
+      stickyBtn.style.borderRadius = `${style.cornerRadius || 6}px`;
+      stickyBtn.style.padding = "10px 18px";
+      stickyBtn.style.fontSize = "13px";
+      stickyBtn.style.fontWeight = "700";
+      stickyBtn.style.cursor = "pointer";
+      stickyBtn.textContent = deal.stickyBtnText || "Add bundle";
+      
+      stickyBtn.addEventListener("click", () => {
+        if (atcButton) atcButton.click();
+      });
+      stickyBar.appendChild(stickyBtn);
+
+      document.body.appendChild(stickyBar);
+      
+      // Update price display on sticky button when tier changes
+      window.addEventListener("bundlify:tier_changed", (e) => {
+        const totalStr = e.detail?.totalPrice?.toFixed(2) || "0.00";
+        stickyBtn.textContent = `${deal.stickyBtnText || "Add bundle"} — $${totalStr}`;
+      });
+    }
+
     // C. Inject widget right above the Add to Cart button
     atcButton.parentNode.insertBefore(widgetContainer, atcButton);
     
@@ -281,6 +432,54 @@
     }
     dealIdInput.value = deal.id;
 
+    // C. Dynamic Gift Milestone Progress update
+    let originalTotal = basePrice * activeTier.quantity;
+    let discountedTotal = originalTotal;
+    if (activeTier.discountType === "percentage") {
+      discountedTotal = originalTotal * (1 - activeTier.discountValue / 100);
+    } else if (activeTier.discountType === "fixed") {
+      discountedTotal = originalTotal - activeTier.discountValue;
+    } else if (activeTier.discountType === "price") {
+      discountedTotal = activeTier.discountValue;
+    }
+
+    if (deal.giftsEnabled) {
+      const giftWrapper = document.getElementById("bundlify-gifts-milestone-wrapper");
+      if (giftWrapper) {
+        const giftThreshold = deal.giftThreshold || 75;
+        const progressPct = Math.min((discountedTotal / giftThreshold) * 100, 100);
+        const remaining = Math.max(giftThreshold - discountedTotal, 0).toFixed(2);
+        const giftProduct = deal.giftProduct || "Free Gift";
+        const message = remaining === "0.00" 
+          ? `🎉 Congratulations! You unlocked a ${giftProduct}!`
+          : (deal.giftText || "Spend ${{remaining}} more to get a {{gift}}!")
+              .replace("{{remaining}}", remaining)
+              .replace("{{gift}}", giftProduct);
+
+        giftWrapper.innerHTML = `
+          <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+            <span>Progress: $${discountedTotal.toFixed(2)} / $${giftThreshold.toFixed(2)}</span>
+            <span style="color: ${remaining === "0.00" ? "#16a34a" : "#64748b"}; font-size: 11px;">
+              ${remaining === "0.00" ? "Unlocked!" : "Locked"}
+            </span>
+          </div>
+          <div style="width: 100%; height: 6px; background: #cbd5e1; border-radius: 100px; overflow: hidden; margin-bottom: 6px;">
+            <div style="width: ${progressPct}%; height: 100%; background: ${remaining === "0.00" ? "#22c55e" : "#000000"}; transition: width 0.2s ease;"></div>
+          </div>
+          <div style="font-size: 11.5px; color: ${remaining === "0.00" ? "#15803d" : "#475569"}; font-weight: 500;">
+            ${message}
+          </div>
+        `;
+      }
+    }
+
+    // D. Dispatch Sticky Cart sync event
+    window.dispatchEvent(
+      new CustomEvent("bundlify:tier_changed", {
+        detail: { totalPrice: discountedTotal },
+      })
+    );
+
     // Optional: Hide native quantity selectors from theme if deal forces single-item select
     const themeQtySelectors = document.querySelectorAll(".quantity, .product-form__quantity, [data-quantity-input]");
     themeQtySelectors.forEach((selector) => {
@@ -288,5 +487,36 @@
     });
 
     console.log(`Bundlify App Embed: Selected quantity sync ${activeTier.quantity} items for deal ${deal.name}`);
+  }
+
+  function updateUpsellProductProperties(isEnabled, productName, price) {
+    const productForm = document.querySelector('form[action="/cart/add"]');
+    if (!productForm) return;
+
+    let upsellInput = productForm.querySelector('input[name="properties[_bundlify_upsell_product]"]');
+    let upsellPriceInput = productForm.querySelector('input[name="properties[_bundlify_upsell_price]"]');
+
+    if (isEnabled) {
+      if (!upsellInput) {
+        upsellInput = document.createElement("input");
+        upsellInput.type = "hidden";
+        upsellInput.name = "properties[_bundlify_upsell_product]";
+        productForm.appendChild(upsellInput);
+      }
+      upsellInput.value = productName;
+
+      if (!upsellPriceInput) {
+        upsellPriceInput = document.createElement("input");
+        upsellPriceInput.type = "hidden";
+        upsellPriceInput.name = "properties[_bundlify_upsell_price]";
+        productForm.appendChild(upsellPriceInput);
+      }
+      upsellPriceInput.value = String(price);
+      console.log(`Bundlify App Embed: Checkbox upsell added: ${productName} ($${price})`);
+    } else {
+      if (upsellInput) upsellInput.remove();
+      if (upsellPriceInput) upsellPriceInput.remove();
+      console.log(`Bundlify App Embed: Checkbox upsell removed`);
+    }
   }
 })();
