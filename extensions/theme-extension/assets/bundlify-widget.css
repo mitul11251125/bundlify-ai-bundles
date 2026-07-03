@@ -1,0 +1,176 @@
+/* ── Storefront Widget Styles ── */
+
+.bundlify-widget-container {
+  display: block;
+  margin: 16px 0;
+  width: 100%;
+  clear: both;
+}
+
+.bundlify-block-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.bundlify-block-title-line {
+  flex: 1;
+  height: 1px;
+  background: #e4e4e7;
+}
+
+.bundlify-block-title {
+  font-family: inherit;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.bundlify-tiers-list {
+  display: flex;
+  box-sizing: border-box;
+}
+
+.bundlify-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-width: 1.5px;
+  border-style: solid;
+  cursor: pointer;
+  box-sizing: border-box;
+  position: relative;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.bundlify-radio-outer {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #d4d4d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bundlify-radio-inner {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.bundlify-tier-row.active .bundlify-radio-outer {
+  border-color: var(--border-color, #000);
+  background: var(--border-color, #000);
+}
+
+.bundlify-tier-row.active .bundlify-radio-inner {
+  background: #fff;
+}
+
+.bundlify-tier-label-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bundlify-tier-label {
+  font-family: inherit;
+  color: var(--title-color, #000);
+}
+
+.bundlify-tier-save-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--label-bg, #e3e3e3);
+  color: var(--label-text, #000);
+  padding: 2px 7px;
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+
+.bundlify-price-group {
+  text-align: right;
+  line-height: 1.2;
+}
+
+.bundlify-price-display {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--price-color, #000);
+}
+
+.bundlify-original-price {
+  font-size: 12px;
+  color: var(--full-price-color, #8c9196);
+  text-decoration: line-through;
+  margin-top: 2px;
+}
+
+.bundlify-tier-top-badge {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: var(--badge-bg, #000);
+  color: var(--badge-text, #fff);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.3px;
+  z-index: 1;
+}
+
+/* ── Layout Presets ── */
+
+/* Grid Preset */
+.bundlify-layout-card {
+  flex-direction: column;
+  gap: 10px;
+}
+.bundlify-layout-card .bundlify-tier-row {
+  width: 100%;
+}
+
+/* List Preset */
+.bundlify-layout-list {
+  flex-direction: column;
+  gap: 10px;
+}
+.bundlify-layout-list .bundlify-tier-row {
+  width: 100%;
+}
+
+/* Compact Preset */
+.bundlify-layout-compact {
+  flex-direction: column;
+  gap: 6px;
+}
+.bundlify-layout-compact .bundlify-tier-row {
+  padding: 8px 12px;
+  width: 100%;
+}
+
+/* Pill/Horizontal Preset */
+.bundlify-layout-pill {
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.bundlify-layout-pill .bundlify-tier-row {
+  flex: 1;
+  min-width: 120px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.bundlify-layout-pill .bundlify-price-group {
+  text-align: center;
+}

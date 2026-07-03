@@ -32,3 +32,113 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+// ─── Bundlify Bundle Deal Models ───────────────────────────────────────────
+
+model Deal {
+  id          String   @id @default(cuid())
+  shop        String   // myshopify domain
+  name        String   // internal name (merchant only)
+  blockTitle  String   @default("BUNDLE & SAVE")
+  discountName String  @default("")
+  status      String   @default("draft") // "draft" | "active" | "paused"
+  dealType    String   @default("quantity_breaks") // "quantity_breaks" | "bxgy" | "complete_bundle" | "subscription" | "progressive_gifts"
+
+  // Product targeting
+  targetType  String   @default("all") // "all" | "products" | "collections"
+  targetIds   String[] @default([])   // product/collection GIDs
+  excludeIds  String[] @default([])   // excluded product GIDs
+
+  // Settings
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  markets     String   @default("all")
+  excludeB2B  Boolean  @default(false)
+
+  // Pricing options
+  showPricePerItem      Boolean @default(false)
+  useCompareAtPrice     Boolean @default(true)
+  skipCart              Boolean @default(false)
+
+  // Variant options  
+  allowVariantPerItem   Boolean @default(true)
+  showVariantForSingle  Boolean @default(true)
+  hideThemeVariantPicker Boolean @default(false)
+  hideUnavailableVariants Boolean @default(false)
+
+  // Shopify discount GID (created when published)
+  shopifyDiscountId String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tiers DealTier[]
+  style DealStyle?
+
+  @@index([shop])
+  @@index([shop, status])
+}
+
+model DealTier {
+  id            String  @id @default(cuid())
+  dealId        String
+  deal          Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  position      Int     @default(0) // sort order (drag reorder)
+  label         String  // e.g. "Single", "Duo", "Best Value"
+  quantity      Int     @default(1)
+  discountType  String  @default("percentage") // "percentage" | "fixed" | "price"
+  discountValue Float   @default(0)
+  badge         String? // e.g. "Most Popular", "Best Value"
+  isBadgeEnabled Boolean @default(false)
+  scratchOff    Boolean @default(false) // hide behind scratch-off
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealId])
+}
+
+model DealStyle {
+  id     String @id @default(cuid())
+  dealId String @unique
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  // Layout
+  layoutPreset  String @default("card") // "card" | "list" | "compact" | "pill"
+  cornerRadius  Int    @default(8)
+  spacing       Int    @default(10)
+
+  // General colors
+  cardsBg       String @default("#ffffff")
+  selectedBg    String @default("#f0f5ff")
+  borderColor   String @default("#000000")
+  blockTitleColor String @default("#000000")
+
+  // Bar text colors
+  titleColor    String @default("#000000")
+  subtitleColor String @default("#6d7175")
+  priceColor    String @default("#000000")
+  fullPriceColor String @default("#8c9196")
+
+  // Label
+  labelBg       String @default("#e3e3e3")
+  labelText     String @default("#000000")
+
+  // Badge (Most Popular)
+  badgeBg       String @default("#000000")
+  badgeText     String @default("#ffffff")
+
+  // Typography
+  blockTitleSize  Int    @default(14)
+  blockTitleStyle String @default("bold")
+  titleSize       Int    @default(20)
+  titleStyle      String @default("bold")
+  subtitleSize    Int    @default(14)
+  subtitleStyle   String @default("regular")
+  labelSize       Int    @default(12)
+  labelStyle      String @default("regular")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

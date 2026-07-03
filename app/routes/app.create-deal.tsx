@@ -22,9 +22,10 @@ export default function CreateDeal() {
   const handleChooseTemplate = (templateName: string) => {
     shopify.toast.show(`Template Selected: ${templateName}`);
     setTimeout(() => {
-      navigate("/app");
-    }, 1500);
+      navigate("/app/bundles/new");
+    }, 400);
   };
+
 
   const colorsList: { theme: ColorTheme; hex: string }[] = [
     { theme: "black", hex: "#111" },
