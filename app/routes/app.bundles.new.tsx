@@ -12,6 +12,22 @@ import {
   setDealStatus,
 } from "../models/deal.server";
 
+// Import custom icons
+import eyeIcon from "../../src/icons/eye.png";
+import questionIcon from "../../src/icons/question.png";
+import settingsIcon from "../../src/icons/settings.png";
+import gridIcon from "../../src/icons/grid.png";
+import megaphoneIcon from "../../src/icons/megaphone.png";
+import plusIcon from "../../src/icons/plus.png";
+import checkIcon from "../../src/icons/check.png";
+import lockIcon from "../../src/icons/lock.png";
+import globeIcon from "../../src/icons/globe.png";
+import powerIcon from "../../src/icons/power.png";
+import starIcon from "../../src/icons/star.png";
+import coinsIcon from "../../src/icons/coins.png";
+import groupIcon from "../../src/icons/group.png";
+import listIcon from "../../src/icons/list.png";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type TierLocal = {
@@ -819,7 +835,7 @@ export default function BundleConfigurator() {
         <button 
           style={{ background: "#ffffff", border: "1px solid #babfc3", borderRadius: "6px", padding: "8px 16px", fontSize: "14px", fontWeight: 600, color: "#202223", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
         >
-          🌐 Translations
+          <img src={globeIcon} style={{ width: "14px", height: "14px", objectFit: "contain" }} alt="Translations" /> Translations
         </button>
       </div>
 
@@ -834,7 +850,7 @@ export default function BundleConfigurator() {
             <div style={headerRowStyle(openSection === "products")} onClick={() => setOpenSection(openSection === "products" ? "" : "products")}>
               <span style={{ marginRight: "12px", fontSize: "10px", color: "#6d7175", transition: "transform 0.2s", transform: openSection === "products" ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, color: "#1a1a1a" }}>
-                <span>🏷️</span> Products
+                <img src={gridIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Products" /> Products
               </div>
             </div>
             {openSection === "products" && (
@@ -968,7 +984,7 @@ export default function BundleConfigurator() {
             <div style={headerRowStyle(openSection === "settings")} onClick={() => setOpenSection(openSection === "settings" ? "" : "settings")}>
               <span style={{ marginRight: "12px", fontSize: "10px", color: "#6d7175", transition: "transform 0.2s", transform: openSection === "settings" ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, color: "#1a1a1a" }}>
-                <span>⚙️</span> Settings
+                <img src={settingsIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Settings" /> Settings
               </div>
             </div>
             {openSection === "settings" && (
@@ -1154,7 +1170,7 @@ export default function BundleConfigurator() {
             <div style={headerRowStyle(openSection === "style")} onClick={() => setOpenSection(openSection === "style" ? "" : "style")}>
               <span style={{ marginRight: "12px", fontSize: "10px", color: "#6d7175", transition: "transform 0.2s", transform: openSection === "style" ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, color: "#1a1a1a" }}>
-                <span>✏️</span> Style
+                <img src={listIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Style" /> Style
               </div>
             </div>
             {openSection === "style" && (
@@ -1210,7 +1226,7 @@ export default function BundleConfigurator() {
                 <span style={{ marginRight: "8px", fontSize: "10px", color: "#6d7175", transition: "transform 0.2s", transform: expandedTier === tier.id ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
 
                 <div style={{ fontWeight: 600, color: "#1a1a1a", flex: 1, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>📢</span> Bar #{i + 1} - {tier.label}
+                  <img src={megaphoneIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Bar" /> Bar #{i + 1} - {tier.label}
                 </div>
 
                 {/* Three Dots Actions Menu */}
@@ -1327,7 +1343,7 @@ export default function BundleConfigurator() {
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
               }}
             >
-              <span style={{ fontSize: "16px" }}>⊕</span> Add bar
+              <img src={plusIcon} style={{ width: "12px", height: "12px", objectFit: "contain", filter: "invert(1)" }} alt="Add" /> Add bar
             </button>
           </div>
 
@@ -1347,7 +1363,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "volume" ? "" : "volume")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>❓</span> Volume discount with other products
+                  <img src={questionIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Volume" /> Volume discount with other products
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={volumeDiscountEnabled} onChange={(e) => setVolumeDiscountEnabled(e.target.checked)} />
@@ -1376,7 +1392,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "countdown" ? "" : "countdown")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>⏱️</span> Countdown timer
+                  <img src={starIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Timer" /> Countdown timer
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={countdownEnabled} onChange={(e) => setCountdownEnabled(e.target.checked)} />
@@ -1421,7 +1437,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "scratchoff" ? "" : "scratchoff")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>🎭</span> Scratch-off
+                  <img src={lockIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Scratchoff" /> Scratch-off
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={scratchOffEnabled} onChange={(e) => setScratchOffEnabled(e.target.checked)} />
@@ -1450,7 +1466,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "subscriptions" ? "" : "subscriptions")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>💳</span> Subscriptions
+                  <img src={powerIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Subscriptions" /> Subscriptions
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={subscriptionsEnabled} onChange={(e) => setSubscriptionsEnabled(e.target.checked)} />
@@ -1479,7 +1495,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "upsells" ? "" : "upsells")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>🔄</span> Checkbox upsells
+                  <img src={checkIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Upsells" /> Checkbox upsells
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={upsellsEnabled} onChange={(e) => setUpsellsEnabled(e.target.checked)} />
@@ -1519,7 +1535,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "gifts" ? "" : "gifts")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>🎁</span> Progressive gifts
+                  <img src={starIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Gifts" /> Progressive gifts
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={giftsEnabled} onChange={(e) => setGiftsEnabled(e.target.checked)} />
@@ -1559,7 +1575,7 @@ export default function BundleConfigurator() {
                   onClick={() => setOpenSection(openSection === "sticky" ? "" : "sticky")}
                   style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, flex: 1, cursor: "pointer", color: "#1a1a1a" }}
                 >
-                  <span>🛒</span> Sticky add to cart
+                  <img src={eyeIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="Sticky" /> Sticky add to cart
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={stickyEnabled} onChange={(e) => setStickyEnabled(e.target.checked)} />
@@ -1584,7 +1600,7 @@ export default function BundleConfigurator() {
             <div style={cardStyle}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, color: "#1a1a1a" }}>
-                  <span>⚠️</span> Low stock alert
+                  <img src={lockIcon} style={{ width: "16px", height: "16px", objectFit: "contain" }} alt="LowStock" /> Low stock alert
                 </div>
                 <label className="bundlify-switch">
                   <input type="checkbox" checked={lowStockAlert} onChange={(e) => setLowStockAlert(e.target.checked)} />
