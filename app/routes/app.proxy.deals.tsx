@@ -86,10 +86,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         skipCart: deal.skipCart,
         showPricePerItem: deal.showPricePerItem,
         useCompareAtPrice: deal.useCompareAtPrice,
+        priceRounding: deal.priceRounding,
+        showPricesWithoutDecimals: deal.showPricesWithoutDecimals,
         allowVariantPerItem: deal.allowVariantPerItem,
         showVariantForSingle: deal.showVariantForSingle,
         hideThemeVariantPicker: deal.hideThemeVariantPicker,
         hideUnavailableVariants: deal.hideUnavailableVariants,
+        dontUpdateOtherProducts: deal.dontUpdateOtherProducts,
+        lowStockAlert: deal.lowStockAlert,
 
         // Countdown Timer
         countdownEnabled: deal.countdownEnabled,

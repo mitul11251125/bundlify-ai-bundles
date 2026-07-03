@@ -36,6 +36,10 @@
 
   console.log("Bundlify App Embed: Found Product GID:", productGid);
 
+  // Outer closure variables
+  let basePrice = 29.99;
+  let productVariants = [];
+
   // 3. Fetch active deal via App Proxy
   fetch(`/apps/bundlify/deals?product_id=${encodeURIComponent(productGid)}`)
     .then((response) => response.json())
@@ -105,6 +109,16 @@
     `;
     widgetContainer.setAttribute("style", cssVars);
 
+    // Optional: Hide native variant selector elements from theme
+    if (deal.hideThemeVariantPicker) {
+      const themeVariantSelects = document.querySelectorAll(
+        '.product-form__input--select, .product-form__input--radio, [data-section] select, .product-form__variants, [id^="Option-"], [id^="OptionVal-"]'
+      );
+      themeVariantSelects.forEach((el) => {
+        el.style.display = "none";
+      });
+    }
+
     // ── Progressive Gifts Banner ──
     if (deal.giftsEnabled) {
       const giftWrapper = document.createElement("div");
@@ -132,7 +146,6 @@
       countdownBanner.style.border = `1px solid ${deal.countdownColor || "#ef4444"}33`;
       
       let durationSeconds = (deal.countdownDuration || 15) * 60;
-      const timerSpan = document.createElement("span");
       
       const updateTimerDisplay = () => {
         const mins = Math.floor(durationSeconds / 60);
@@ -168,11 +181,11 @@
     titleSpan.textContent = deal.blockTitle || "BUNDLE & SAVE";
     titleSpan.style.fontSize = `${style.blockTitleSize || 14}px`;
     titleSpan.style.fontWeight = style.blockTitleStyle === "bold" ? "700" : "400";
-    titleSpan.style.color = style.blockTitleColor || "#000000";
-
+    titleSpan.style.color = style.blockTitleColor || "#1e293b";
+    
     const lineRight = document.createElement("div");
     lineRight.className = "bundlify-block-title-line";
-
+    
     titleWrapper.appendChild(lineLeft);
     titleWrapper.appendChild(titleSpan);
     titleWrapper.appendChild(lineRight);
@@ -185,14 +198,14 @@
 
     let selectedTierIndex = 0; // Default select first tier
 
-    // Mock calculations (fetch base price from Shopify storefront theme variables or DOM)
-    let basePrice = 29.99;
+    // Parse product json data
     const priceScript = document.querySelector('script[type="application/json"][data-product-json]');
     if (priceScript) {
       try {
         const parsed = JSON.parse(priceScript.textContent);
         if (parsed.price) basePrice = parsed.price / 100;
         else if (parsed.variants?.[0]?.price) basePrice = parsed.variants[0].price / 100;
+        productVariants = parsed.variants || [];
       } catch (e) {}
     } else {
       // Fetch from meta theme tags if available
@@ -238,44 +251,47 @@
         discountedTotal = originalTotal * (1 - pct / 100);
       } else if (tier.discountType === "fixed") {
         discountedTotal = originalTotal - tier.discountValue;
-        pct = Math.round(((originalTotal - discountedTotal) / originalTotal) * 100);
+        pct = Math.round((tier.discountValue / originalTotal) * 100);
       } else if (tier.discountType === "price") {
         discountedTotal = tier.discountValue;
         pct = Math.round(((originalTotal - discountedTotal) / originalTotal) * 100);
       }
 
-      // Price rounding psychology trick: ends in .99
+      // Rounded pricing settings
       if (deal.priceRounding && pct > 0) {
         discountedTotal = Math.round(discountedTotal) - 0.01;
       }
 
       if (pct > 0) {
         const saveBadge = document.createElement("span");
-        saveBadge.className = "bundlify-tier-save-badge";
+        saveBadge.className = "bundlify-save-badge";
+        saveBadge.style.fontSize = `${style.labelSize || 11}px`;
+        saveBadge.style.background = style.labelBg || "#e3e3e3";
+        saveBadge.style.color = style.labelText || "#000000";
         saveBadge.textContent = `SAVE ${pct}%`;
         labelGroup.appendChild(saveBadge);
       }
       row.appendChild(labelGroup);
 
-      // Prices group
+      // Pricing group
       const priceGroup = document.createElement("div");
       priceGroup.className = "bundlify-price-group";
-      
+
       const priceDisplay = document.createElement("div");
-      priceDisplay.className = "bundlify-price-display";
+      priceDisplay.className = "bundlify-discount-price";
+      priceDisplay.style.fontSize = `${style.priceSize || 16}px`;
 
       let displayPriceStr = "";
       let originalPriceStr = "";
 
       if (deal.showPricePerItem) {
         const perItemPrice = discountedTotal / tier.quantity;
-        const perItemOrig = originalTotal / tier.quantity;
         if (deal.showPricesWithoutDecimals) {
           displayPriceStr = `$${Math.round(perItemPrice)}/item`;
-          originalPriceStr = `$${Math.round(perItemOrig)}`;
+          originalPriceStr = `$${Math.round(basePrice)}/item`;
         } else {
           displayPriceStr = `$${perItemPrice.toFixed(2)}/item`;
-          originalPriceStr = `$${perItemOrig.toFixed(2)}`;
+          originalPriceStr = `$${basePrice.toFixed(2)}/item`;
         }
       } else {
         if (deal.showPricesWithoutDecimals) {
@@ -315,7 +331,16 @@
           r.className = `bundlify-tier-row ${rIdx === selectedTierIndex ? "active" : ""}`;
           r.style.borderColor = rIdx === selectedTierIndex ? (style.borderColor || "#000000") : "#e4e4e7";
           r.style.background = rIdx === selectedTierIndex ? (style.selectedBg || "#f0f5ff") : (style.cardsBg || "#ffffff");
+          
+          // Clear variant container in other rows
+          const existing = r.querySelector(".bundlify-variant-selectors-container");
+          if (existing) existing.remove();
         });
+
+        // Render variant selectors in the active row if enabled
+        if (deal.allowVariantPerItem && productVariants.length > 1) {
+          renderVariantDropdowns(row, tier, productVariants);
+        }
 
         // Trigger updates to parent checkout flow
         updateShopifyATCBehavior(deal, tier);
@@ -326,6 +351,65 @@
 
     rows.forEach((row) => tiersList.appendChild(row));
     widgetContainer.appendChild(tiersList);
+
+    // Render variant dropdowns inside the active row on initial load
+    if (deal.allowVariantPerItem && productVariants.length > 1 && rows[selectedTierIndex]) {
+      renderVariantDropdowns(rows[selectedTierIndex], deal.tiers[selectedTierIndex], productVariants);
+    }
+
+    // Helper: Render variant select dropdowns for each item in active tier
+    function renderVariantDropdowns(rowNode, tierObj, variantsList) {
+      const container = document.createElement("div");
+      container.className = "bundlify-variant-selectors-container";
+      container.style.marginTop = "10px";
+      container.style.paddingTop = "10px";
+      container.style.borderTop = "1px dashed #e2e8f0";
+      container.style.display = "flex";
+      container.style.flexDirection = "column";
+      container.style.gap = "8px";
+      container.style.width = "100%";
+
+      for (let i = 0; i < tierObj.quantity; i++) {
+        const itemRow = document.createElement("div");
+        itemRow.style.display = "flex";
+        itemRow.style.alignItems = "center";
+        itemRow.style.justifyContent = "space-between";
+        itemRow.style.fontSize = "12px";
+
+        const label = document.createElement("span");
+        label.textContent = `Product #${i + 1}:`;
+        label.style.fontWeight = "600";
+        label.style.color = "#4b5563";
+        itemRow.appendChild(label);
+
+        const select = document.createElement("select");
+        select.className = "bundlify-variant-select-item";
+        select.style.padding = "4px 8px";
+        select.style.border = "1px solid #cbd5e1";
+        select.style.borderRadius = "4px";
+        select.style.background = "#ffffff";
+        select.style.fontSize = "12px";
+        select.style.outline = "none";
+        select.style.maxWidth = "200px";
+
+        variantsList.forEach(v => {
+          if (deal.hideUnavailableVariants && !v.available) return;
+
+          const opt = document.createElement("option");
+          opt.value = v.id;
+          opt.textContent = v.title + (v.available ? "" : " (Out of stock)");
+          opt.disabled = !v.available;
+          select.appendChild(opt);
+        });
+
+        itemRow.appendChild(select);
+        container.appendChild(itemRow);
+      }
+
+      // Prevent collapse on click dropdown
+      container.addEventListener("click", (e) => e.stopPropagation());
+      rowNode.appendChild(container);
+    }
 
     // ── Checkbox Upsells Banner ──
     if (deal.upsellsEnabled) {
@@ -349,109 +433,138 @@
       upsellCheckbox.style.width = "16px";
       upsellCheckbox.style.height = "16px";
       upsellCheckbox.style.cursor = "pointer";
-      upsellCard.appendChild(upsellCheckbox);
 
-      const upsellLabel = document.createElement("div");
-      upsellLabel.style.flex = "1";
-      upsellLabel.style.fontSize = "13px";
-      upsellLabel.style.color = "#18181b";
-      upsellLabel.style.fontWeight = "500";
+      const upsellInfo = document.createElement("div");
+      upsellInfo.style.flex = 1;
       
-      const upsellProduct = deal.upsellProduct || "Extra Protection Warranty";
-      const upsellPrice = deal.upsellPrice || 4.99;
-      upsellLabel.textContent = (deal.upsellText || "Add {{product}} for just ${{price}}")
-        .replace("{{product}}", upsellProduct)
-        .replace("{{price}}", upsellPrice.toFixed(2));
-      upsellCard.appendChild(upsellLabel);
+      const upsellTitle = document.createElement("div");
+      upsellTitle.style.fontSize = "13px";
+      upsellTitle.style.fontWeight = "600";
+      upsellTitle.style.color = "#1a1a1a";
+      upsellTitle.textContent = deal.upsellText || "Add additional warranty protection";
 
-      // Toggle checkbox checked on card click
-      upsellCard.addEventListener("click", () => {
-        upsellCheckbox.checked = !upsellCheckbox.checked;
-        updateUpsellProductProperties(upsellCheckbox.checked, upsellProduct, upsellPrice);
-      });
-      upsellCheckbox.addEventListener("click", (e) => {
-        e.stopPropagation();
-        updateUpsellProductProperties(upsellCheckbox.checked, upsellProduct, upsellPrice);
+      const upsellPriceTag = document.createElement("div");
+      upsellPriceTag.style.fontSize = "11.5px";
+      upsellPriceTag.style.color = "#6d7175";
+      upsellPriceTag.textContent = `+$${(deal.upsellPrice || 4.99).toFixed(2)}`;
+
+      upsellInfo.appendChild(upsellTitle);
+      upsellInfo.appendChild(upsellPriceTag);
+
+      upsellCard.appendChild(upsellCheckbox);
+      upsellCard.appendChild(upsellInfo);
+
+      upsellCard.addEventListener("click", (e) => {
+        if (e.target !== upsellCheckbox) {
+          upsellCheckbox.checked = !upsellCheckbox.checked;
+        }
+        updateUpsellProductProperties(upsellCheckbox.checked, deal.upsellProduct, deal.upsellPrice);
       });
 
       widgetContainer.appendChild(upsellCard);
+      
+      // Init Upsell attributes
+      updateUpsellProductProperties(true, deal.upsellProduct, deal.upsellPrice);
     }
 
-    // ── Sticky Cart Bar ──
-    if (deal.stickyEnabled) {
-      const stickyBar = document.createElement("div");
-      stickyBar.style.position = "fixed";
-      stickyBar.style.bottom = "0";
-      stickyBar.style.left = "0";
-      stickyBar.style.width = "100%";
-      stickyBar.style.background = "#ffffff";
-      stickyBar.style.borderTop = "2px solid #09090b";
-      stickyBar.style.padding = "12px 24px";
-      stickyBar.style.display = "flex";
-      stickyBar.style.alignItems = "center";
-      stickyBar.style.justifyContent = "space-between";
-      stickyBar.style.boxShadow = "0 -4px 16px rgba(0,0,0,0.1)";
-      stickyBar.style.zIndex = "9999";
-      stickyBar.style.fontFamily = "inherit";
-      stickyBar.style.boxSizing = "border-box";
-
-      const stickyTitle = document.createElement("div");
-      stickyTitle.style.fontWeight = "600";
-      stickyTitle.style.fontSize = "14px";
-      stickyTitle.style.color = "#18181b";
-      stickyTitle.textContent = deal.stickyText || "Grab this bundle deal now!";
-      stickyBar.appendChild(stickyTitle);
-
-      const stickyBtn = document.createElement("button");
-      stickyBtn.style.background = "#09090b";
-      stickyBtn.style.color = "#ffffff";
-      stickyBtn.style.border = "none";
-      stickyBtn.style.borderRadius = `${style.cornerRadius || 6}px`;
-      stickyBtn.style.padding = "10px 18px";
-      stickyBtn.style.fontSize = "13px";
-      stickyBtn.style.fontWeight = "700";
-      stickyBtn.style.cursor = "pointer";
-      stickyBtn.textContent = deal.stickyBtnText || "Add bundle";
-      
-      stickyBtn.addEventListener("click", () => {
-        if (atcButton) atcButton.click();
-      });
-      stickyBar.appendChild(stickyBtn);
-
-      document.body.appendChild(stickyBar);
-      
-      // Update price display on sticky button when tier changes
-      window.addEventListener("bundlify:tier_changed", (e) => {
-        const totalStr = e.detail?.totalPrice?.toFixed(2) || "0.00";
-        stickyBtn.textContent = `${deal.stickyBtnText || "Add bundle"} — $${totalStr}`;
-      });
+    // ── Low Stock Alert Banner ──
+    if (deal.lowStockAlert) {
+      const stockAlert = document.createElement("div");
+      stockAlert.style.marginTop = "12px";
+      stockAlert.style.padding = "8px 12px";
+      stockAlert.style.background = "#fffbeb";
+      stockAlert.style.border = "1px dashed #f59e0b";
+      stockAlert.style.borderRadius = `${style.cornerRadius || 6}px`;
+      stockAlert.style.fontSize = "12px";
+      stockAlert.style.color = "#b45309";
+      stockAlert.style.fontWeight = "600";
+      stockAlert.style.display = "flex";
+      stockAlert.style.alignItems = "center";
+      stockAlert.style.gap = "6px";
+      stockAlert.textContent = "🔥 Warning: Low stock! Items in this bundle are selling out fast.";
+      widgetContainer.appendChild(stockAlert);
     }
 
     // C. Inject widget right above the Add to Cart button
     atcButton.parentNode.insertBefore(widgetContainer, atcButton);
     
-    // D. Skip Cart redirection handling
+    // D. Batch Add-to-Cart form submit interceptor (Handles multiple variants & skipCart)
     const productFormEl = document.querySelector('form[action="/cart/add"]');
-    if (deal.skipCart && productFormEl) {
+    if (productFormEl) {
       productFormEl.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(productFormEl);
-        
-        if (atcButton) {
-          atcButton.disabled = true;
-          atcButton.textContent = "Redirecting to checkout...";
-        }
+        const activeRow = tiersList.querySelector(".bundlify-tier-row.active");
+        if (!activeRow) return;
 
-        fetch("/cart/add.js", {
-          method: "POST",
-          body: formData
-        })
-        .then(() => {
-          window.location.href = "/checkout";
-        })
-        .catch(() => {
-          window.location.href = "/checkout";
-        });
+        const selectDropdowns = activeRow.querySelectorAll(".bundlify-variant-select-item");
+        
+        // CASE 1: Allow variants per item is active and dropdowns are rendered
+        if (selectDropdowns.length > 0) {
+          e.preventDefault();
+
+          if (atcButton) {
+            atcButton.disabled = true;
+            atcButton.textContent = "Adding bundle to cart...";
+          }
+
+          const itemsPayload = [];
+          const qtyMap = {};
+          
+          selectDropdowns.forEach(select => {
+            const variantId = select.value;
+            qtyMap[variantId] = (qtyMap[variantId] || 0) + 1;
+          });
+
+          for (const [variantId, qty] of Object.entries(qtyMap)) {
+            itemsPayload.push({
+              id: Number(variantId),
+              quantity: qty,
+              properties: {
+                "_bundlify_deal_id": deal.id
+              }
+            });
+          }
+
+          fetch("/cart/add.js", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ items: itemsPayload })
+          })
+          .then(res => res.json())
+          .then(() => {
+            if (deal.skipCart) {
+              window.location.href = "/checkout";
+            } else {
+              window.location.href = "/cart";
+            }
+          })
+          .catch(err => {
+            console.error("Bundlify add to cart error:", err);
+            window.location.href = "/cart";
+          });
+        } 
+        // CASE 2: No multiple variants dropdowns, but skipCart is enabled
+        else if (deal.skipCart) {
+          e.preventDefault();
+          const formData = new FormData(productFormEl);
+
+          if (atcButton) {
+            atcButton.disabled = true;
+            atcButton.textContent = "Redirecting to checkout...";
+          }
+
+          fetch("/cart/add.js", {
+            method: "POST",
+            body: formData
+          })
+          .then(() => {
+            window.location.href = "/checkout";
+          })
+          .catch(() => {
+            window.location.href = "/checkout";
+          });
+        }
       });
     }
 
@@ -462,7 +575,6 @@
   // ─── Cart and Quantity Update Interceptors ─────────────────────────────────
 
   function updateShopifyATCBehavior(deal, activeTier) {
-    // Dynamic override of Shopify native Product Form input values
     const productForm = document.querySelector('form[action="/cart/add"]');
     if (!productForm) return;
 
@@ -495,6 +607,11 @@
       discountedTotal = originalTotal - activeTier.discountValue;
     } else if (activeTier.discountType === "price") {
       discountedTotal = activeTier.discountValue;
+    }
+
+    // Rounding configuration
+    if (deal.priceRounding) {
+      discountedTotal = Math.round(discountedTotal) - 0.01;
     }
 
     if (deal.giftsEnabled) {
